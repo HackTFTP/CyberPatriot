@@ -23,7 +23,7 @@ Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server\W
 
 # Implement strong password policies
 Write-Host "Configuring password policies..."
-$secpasswd = ConvertTo-SecureString "YourComplexPassword" -AsPlainText -Force
+$secpasswd = ConvertTo-SecureString "Liam@2024@Valentina" -AsPlainText -Force
 Set-LocalUser Administrator -Password $secpasswd
 
 # Disable Guest account
@@ -49,6 +49,16 @@ Write-Host "Setting up regular backups..."
 # Restrict user access and permissions
 Write-Host "Reviewing user access and permissions..."
 # Review and adjust user permissions as needed using Active Directory or local policies
+
+# Password change for all users
+Write-Host "Changing passwords for all users..."
+$NewPassword = ConvertTo-SecureString -String "Liam@2024@Valentina" -AsPlainText -Force
+$Users = Get-LocalUser | Where-Object { $_.Name -ne "Administrator" -and $_.Name -ne "Guest" }
+foreach ($User in $Users) {
+    Set-LocalUser -Name $User.Name -Password $NewPassword
+}
+
+Write-Host "Password change for all users completed."
 
 Write-Host "Security configuration completed."
 

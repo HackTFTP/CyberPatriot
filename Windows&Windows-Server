@@ -1,1 +1,57 @@
-net user
+# CyberPatriot Windows Server 2022 Security Script
+
+# Update Windows Server
+Write-Host "Updating Windows Server..."
+Install-WindowsUpdate -AcceptAll -AutoReboot
+
+# Disable unnecessary services
+Write-Host "Disabling unnecessary services..."
+Get-Service | Where-Object { $_.Status -eq "Running" -and $_.Name -notin @("wuauserv", "msiserver", "WinRM")} | Stop-Service -Force
+Get-Service | Where-Object { $_.StartType -eq "Auto" -and $_.Name -notin @("wuauserv", "msiserver", "WinRM")} | Set-Service -StartupType Disabled
+
+# Enable Windows Firewall
+Write-Host "Configuring Windows Firewall..."
+netsh advfirewall set allprofiles state on
+netsh advfirewall set allprofiles firewallpolicy blockinbound,allowoutbound
+
+# Disable Remote Desktop Protocol (RDP) if not needed
+Write-Host "Disabling RDP..."
+Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server' -Name "fDenyTSConnections" -Value 1
+
+# Enable Network Level Authentication for RDP
+Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp' -Name "UserAuthentication" -Value 1
+
+# Implement strong password policies
+Write-Host "Configuring password policies..."
+$secpasswd = ConvertTo-SecureString "YourComplexPassword" -AsPlainText -Force
+Set-LocalUser Administrator -Password $secpasswd
+
+# Disable Guest account
+Write-Host "Disabling Guest account..."
+Set-LocalUser Guest -Enabled $false
+
+# Audit and monitor security events
+Write-Host "Configuring security auditing..."
+auditpol /set /subcategory:"Logon" /success:enable /failure:enable
+auditpol /set /subcategory:"Account Logon" /success:enable /failure:enable
+auditpol /set /subcategory:"Object Access" /success:enable /failure:enable
+auditpol /set /subcategory:"Policy Change" /success:enable /failure:enable
+auditpol /set /subcategory:"Privilege Use" /success:enable /failure:enable
+
+# Install and configure an antivirus solution
+Write-Host "Installing and configuring antivirus..."
+# Insert commands to install and configure your preferred antivirus software here
+
+# Regularly back up critical data
+Write-Host "Setting up regular backups..."
+# Configure regular backups using Windows Backup or your preferred backup solution
+
+# Restrict user access and permissions
+Write-Host "Reviewing user access and permissions..."
+# Review and adjust user permissions as needed using Active Directory or local policies
+
+Write-Host "Security configuration completed."
+
+# Reboot the server to apply changes
+Write-Host "Rebooting the server to apply changes..."
+Restart-Computer -Force
